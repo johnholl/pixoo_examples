@@ -1,5 +1,9 @@
-# Pixoo
+# Pixoo Examples
 
+This is a fork of the PIXOO library where I've collected some simple mini-apps to run on Pixoo64. The remaining
+sections of the readme are from the Pixoo library project.
+
+# Pixoo
 A library to easily communicate with the Divoom Pixoo 64 (and hopefully soon more screens that support Wi-Fi)
 
 A simple working example application using this "rendering" framework can be found
