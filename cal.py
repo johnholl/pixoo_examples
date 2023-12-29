@@ -32,28 +32,39 @@ events_result = service.events().list(
      orderBy='startTime').execute()
  
 # Pick up only start time, end time and summary info
-events = events_result.get('items', [])
-moveable_summaries = []
-i = 0
-for event in events:
-    start = datetime.datetime.strptime(event['start'].get('dateTime', event['start'].get('date')), '%Y-%m-%d')
-    days_until = (start - datetime.datetime.now()).days
-    if days_until < 10:
-        color = (255, 0, 0)
-    else:
-        color = (255, 255, 255)
-    
-    if len(event['summary']) <= 16:
-        pixoo.draw_text(event['summary'], (0, i*20), color)
-    else:
-        moveable_summaries.append(MoveableText(event['summary'], 0, i*20, True, pixoo, color))
-    pixoo.draw_text(str(days_until) + " days", (0, i*20 + 8), color)
-    pixoo.draw_text("-----------------------------", (0, i*20 + 14), (255, 255, 255))
+def update_events():
+    pixoo.draw_filled_rectangle((0,0), (63,63), (0,0,0))
+    events = events_result.get('items', [])
+    moveable_summaries = []
+    i = 0
+    for event in events:
+        start = datetime.datetime.strptime(event['start'].get('dateTime', event['start'].get('date')), '%Y-%m-%d')
+        days_until = (start - datetime.datetime.now()).days
+        if days_until < 10:
+            color = (255, 0, 0)
+        else:
+            color = (255, 255, 255)
+        
+        if len(event['summary']) <= 16:
+            pixoo.draw_text(event['summary'], (0, i*20), color)
+        else:
+            moveable_summaries.append(MoveableText(event['summary'], 0, i*20, True, pixoo, color))
+        pixoo.draw_text(str(days_until) + " days", (0, i*20 + 8), color)
+        pixoo.draw_text("-----------------------------", (0, i*20 + 14), (255, 255, 255))
 
-    i+= 1
-pixoo.push()
+        i+= 1
 
+    # only return the moveable summaries so they can be updated in a loop
+    return moveable_summaries
+
+moveable_summaries = update_events()
+current_hour = datetime.datetime.now()
 while(True):
+    if (datetime.datetime.now() - current_hour).total_seconds() >= 3600:
+        current_hour = datetime.datetime.now()
+        moveable_summaries = update_events()
+        pixoo.push()
+        time.sleep(3)
     time.sleep(0.5)
     for summary in moveable_summaries:
         if summary.x + 4*len(summary.text) < 48:
