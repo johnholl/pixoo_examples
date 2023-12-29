@@ -2,6 +2,8 @@ import datetime
 import googleapiclient.discovery
 import google.auth
 from pixoo import Pixoo
+from text_utils import MoveableText
+import time
 
 # figure out your PIXOOs ip address
 PIXOO_IP = '192.168.1.128'
@@ -31,7 +33,7 @@ events_result = service.events().list(
  
 # Pick up only start time, end time and summary info
 events = events_result.get('items', [])
- 
+moveable_summaries = []
 i = 0
 for event in events:
     start = datetime.datetime.strptime(event['start'].get('dateTime', event['start'].get('date')), '%Y-%m-%d')
@@ -40,11 +42,24 @@ for event in events:
         color = (255, 0, 0)
     else:
         color = (255, 255, 255)
-              
-    pixoo.draw_text(event['summary'] + ":", (0, i*20), color)
+    
+    if len(event['summary']) <= 16:
+        pixoo.draw_text(event['summary'], (0, i*20), color)
+    else:
+        moveable_summaries.append(MoveableText(event['summary'], 0, i*20, True, pixoo, color))
     pixoo.draw_text(str(days_until) + " days", (0, i*20 + 8), color)
     pixoo.draw_text("-----------------------------", (0, i*20 + 14), (255, 255, 255))
 
     i+= 1
+pixoo.push()
 
-pixoo.push()    
+while(True):
+    time.sleep(0.5)
+    for summary in moveable_summaries:
+        if summary.x + 4*len(summary.text) < 48:
+            summary.reset()
+            pixoo.push()
+            time.sleep(3)
+        else:
+            summary.move(-1, 0)
+            pixoo.push()
